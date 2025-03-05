@@ -1,0 +1,22 @@
+[
+  {
+    "domain": "depression",
+    "threshold": 2,
+    "assessment": "PHQ-9"
+  },
+  {
+    "domain": "mania",
+    "threshold": 2,
+    "assessment": "ASRM"
+  },
+  {
+    "domain": "anxiety",
+    "threshold": 2,
+    "assessment": "PHQ-9"
+  },
+  {
+    "domain": "substance_use",
+    "threshold": 1,
+    "assessment": "ASSIST"
+  }
+]
