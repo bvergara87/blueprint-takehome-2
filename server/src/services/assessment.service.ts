@@ -125,7 +125,7 @@ export class AssessmentService {
     try {
       const { data, error } = await this.supabaseService.client
         .from("screeners")
-        .select("data")
+        .select("*")
         .eq("id", "abcd-123")
         .single();
 
