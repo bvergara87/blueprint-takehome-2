@@ -18,18 +18,19 @@ This application allows patients to take a diagnostic screener (a questionnaire 
 
 ### Frontend
 
-- React
-- React Router
-- Styled Components
+- React 18
+- React Router 6
+- Styled Components 6
 - TypeScript
-- Parcel (bundler)
+- Parcel 2 (bundler)
+- Supabase JavaScript Client
 
 ### Backend
 
-- NestJS
+- NestJS 10
 - Express
 - TypeScript
-- Supabase (PostgreSQL database)
+- Supabase (PostgreSQL database with service role access)
 
 ## Getting Started
 
@@ -42,15 +43,20 @@ This application allows patients to take a diagnostic screener (a questionnaire 
 ### Setting up Supabase
 
 1. Create a new Supabase project
-2. Copy your Supabase URL and API Key (from Project Settings > API)
+2. Copy your Supabase URL and Service Role Key (from Project Settings > API)
 3. Update the `.env` file in the server directory with your Supabase credentials:
 
 ```
 SUPABASE_URL=your_supabase_url
-SUPABASE_API_KEY=your_supabase_api_key
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+SUPABASE_PASSWORD=your_database_password
+SUPABASE_DIRECT_URL=your_direct_database_url
+PORT=3000
 ```
 
-4. Run the database setup script:
+4. Follow the instructions in `SUPABASE_SETUP.md` to configure your database:
+   - Create the necessary stored procedures for SQL execution
+   - Run the database setup script
 
 ```
 cd server
@@ -96,12 +102,22 @@ npm run start
 
 ```
 blueprint-takehome-2/
-├── client/           # Frontend React application
-├── server/           # Backend NestJS application
-│   ├── scripts/      # Database setup scripts
-│   ├── sql/          # SQL schema files
-│   └── src/          # Application source code
-└── README.md         # Project documentation
+├── client/                  # Frontend React application
+│   ├── src/                 # React source code
+│   ├── public/              # Static assets
+│   └── package.json         # Frontend dependencies
+├── server/                  # Backend NestJS application
+│   ├── scripts/             # Database setup scripts
+│   ├── sql/                 # SQL schema files
+│   ├── src/                 # Application source code
+│   │   ├── controllers/     # API endpoints
+│   │   ├── services/        # Business logic
+│   │   ├── models/          # Data models
+│   │   └── main.ts          # Application entry point
+│   ├── .env                 # Environment variables
+│   └── package.json         # Backend dependencies
+├── SUPABASE_SETUP.md        # Supabase configuration guide
+└── README.md                # Project documentation
 ```
 
 ## Database Structure
@@ -115,29 +131,462 @@ The application uses Supabase Postgres database with the following tables:
 
 ## Production Deployment Considerations
 
-### High Availability and Performance
+For a production deployment of this application, several critical enhancements should be made:
+
+### Security Enhancements
+
+#### Row Level Security (RLS)
+
+The current implementation uses a service role key with full database access. For production:
+
+- Implement RLS policies on all tables to control access based on user identity
+- Create separate policies for patients and providers
+- Example policy for responses:
+  ```sql
+  CREATE POLICY "Users can only view their own responses"
+  ON responses FOR SELECT
+  USING (auth.uid() = user_id);
+  ```
+
+#### User Authentication
+
+- Implement Supabase Auth for secure user authentication
+- Set up email/password, social login, and/or SSO options
+- Create separate user roles (patient, provider, admin)
+- Add JWT verification middleware to protect API endpoints
+- Implement session management and token refresh logic
+
+#### API Security
+
+- Replace service role key with JWT auth in client-server communication
+- Implement rate limiting to prevent abuse
+- Add input validation and sanitization for all endpoints
+- Use HTTPS for all connections with proper certificate management
+- Set up security headers (CSP, CORS, HSTS, etc.)
+
+### Provider-Patient Relationship Model
+
+In a production healthcare application, properly modeling the provider-patient relationship is critical for both workflow functionality and regulatory compliance. Here's how this relationship should be structured:
+
+#### User Database Model
+
+The current implementation doesn't include a formal user model. For production, we would implement:
+
+```
+users
+├── id (UUID, PK)
+├── auth_id (FK to Supabase auth.users)
+├── email (unique)
+├── first_name
+├── last_name
+├── phone_number
+├── user_type (enum: 'patient', 'provider', 'admin')
+├── created_at
+└── updated_at
+```
+
+This table would serve as the base for both patients and providers using a polymorphic relationship pattern.
+
+#### Patient Profile
+
+```
+patients
+├── id (UUID, PK)
+├── user_id (FK to users table)
+├── date_of_birth
+├── address
+├── emergency_contact
+├── insurance_information
+├── medical_record_number (unique)
+├── status (active, inactive)
+└── metadata (JSONB for extensibility)
+```
+
+#### Provider Profile
+
+```
+providers
+├── id (UUID, PK)
+├── user_id (FK to users table)
+├── npi_number (National Provider Identifier)
+├── specialties (array of specialties)
+├── credentials (MD, PhD, etc.)
+├── provider_type (psychiatrist, psychologist, etc.)
+├── availability (JSONB)
+└── metadata (JSONB for extensibility)
+```
+
+#### Provider-Patient Relationship
+
+```
+provider_patient_relationships
+├── id (UUID, PK)
+├── provider_id (FK to providers)
+├── patient_id (FK to patients)
+├── relationship_type (primary provider, consulting, etc.)
+├── start_date
+├── end_date (null if active)
+├── status (active, inactive, suspended)
+├── created_at
+└── updated_at
+```
+
+#### Assessment Assignment and Sharing
+
+```
+assessment_assignments
+├── id (UUID, PK)
+├── provider_id (FK to providers)
+├── patient_id (FK to patients)
+├── screener_id (FK to screeners)
+├── status (assigned, completed, reviewed)
+├── assigned_at
+├── completed_at
+├── notes
+└── reminder_settings (JSONB)
+```
+
+```
+assessment_results
+├── id (UUID, PK)
+├── assignment_id (FK to assessment_assignments)
+├── response_id (FK to responses)
+├── provider_notes (private notes for providers)
+├── shared_notes (notes shared with patient)
+├── reviewed_at
+├── shared_with_patient (boolean)
+└── shared_at
+```
+
+#### Access Control Implementation
+
+For the provider-patient relationship, Row Level Security would be implemented as follows:
+
+1. **Base access policy for users**:
+
+   ```sql
+   -- Users can only access their own data
+   CREATE POLICY "Users can view and edit their own data"
+   ON users
+   USING (auth.uid() = auth_id);
+   ```
+
+2. **Providers accessing patient data**:
+
+   ```sql
+   -- Providers can access data for their patients
+   CREATE POLICY "Providers can access their patients' data"
+   ON patients
+   USING (
+     EXISTS (
+       SELECT 1 FROM provider_patient_relationships ppr
+       JOIN providers p ON p.id = ppr.provider_id
+       JOIN users u ON u.id = p.user_id
+       WHERE ppr.patient_id = patients.id
+       AND u.auth_id = auth.uid()
+       AND ppr.status = 'active'
+     )
+   );
+   ```
+
+3. **Assessment result access**:
+   ```sql
+   -- Patients can only see shared results
+   CREATE POLICY "Patients can view their shared assessment results"
+   ON assessment_results
+   FOR SELECT
+   USING (
+     EXISTS (
+       SELECT 1 FROM assessment_assignments aa
+       JOIN patients p ON p.id = aa.patient_id
+       JOIN users u ON u.id = p.user_id
+       WHERE aa.id = assessment_results.assignment_id
+       AND u.auth_id = auth.uid()
+       AND assessment_results.shared_with_patient = true
+     )
+   );
+   ```
+
+#### Workflows
+
+In a production application, the provider-patient relationship would enable specific workflows:
+
+1. **Provider Dashboard**:
+
+   - View all assigned patients
+   - Monitor assessment completion status
+   - Review assessment results
+   - Assign new assessments to patients
+
+2. **Patient Dashboard**:
+
+   - View assigned providers
+   - See pending assessments
+   - Access shared assessment results
+   - Request appointments based on assessment results
+
+3. **Assessment Assignment**:
+
+   - Providers can assign specific screeners to patients
+   - Automated reminders for incomplete assessments
+   - Option to schedule recurring assessments
+
+4. **Result Sharing**:
+   - Providers review results before sharing with patients
+   - Ability to add contextual notes to results
+   - Optional notification system when results are shared
+
+#### Consent Management
+
+For HIPAA compliance, the system should include consent management:
+
+```
+consent_records
+├── id (UUID, PK)
+├── patient_id (FK to patients)
+├── consent_type (treatment, data_sharing, research)
+├── status (granted, revoked)
+├── granted_at
+├── expires_at
+├── revoked_at
+├── document_version
+└── consent_document_url
+```
+
+This structured approach to the provider-patient relationship ensures proper data access controls, supports clinical workflows, and maintains compliance with healthcare regulations.
+
+### HIPAA Compliance (for healthcare data)
+
+- Ensure all PHI is encrypted at rest and in transit
+- Implement audit logs for all data access
+- Set up BAAs with all service providers
+- Develop policies for data retention and deletion
+- Regular security risk assessments
+- Staff training on data handling procedures
+
+### PII and Protected Health Information Management
+
+Managing Personally Identifiable Information (PII) and Protected Health Information (PHI) requires special consideration in healthcare applications:
+
+#### Data Classification
+
+Implement a robust data classification system:
+
+1. **Identifying PII/PHI in the system**:
+
+   - Direct identifiers: Names, addresses, phone numbers, emails, SSNs, medical record numbers
+   - Indirect identifiers: Dates of birth, admission dates, zip codes
+   - Health information: Diagnoses, treatments, medication records, assessment results
+
+2. **Classification levels**:
+   ```
+   data_classification_policies
+   ├── data_type (enum: 'direct_identifier', 'indirect_identifier', 'health_information')
+   ├── sensitivity_level (enum: 'low', 'medium', 'high', 'restricted')
+   ├── retention_period (days)
+   ├── encryption_required (boolean)
+   ├── masking_required (boolean)
+   └── access_restrictions (JSONB)
+   ```
+
+#### Technical Implementation for PII Protection
+
+1. **Data encryption strategy**:
+
+   - Implement field-level encryption for highly sensitive fields (SSN, medical record numbers)
+   - Use different encryption keys for different data types
+   - Rotate encryption keys regularly
+
+2. **Data masking and anonymization**:
+
+   ```sql
+   -- Example function to mask PII in database views
+   CREATE OR REPLACE FUNCTION mask_pii(
+     value TEXT,
+     data_type TEXT,
+     user_role TEXT
+   ) RETURNS TEXT AS $$
+   BEGIN
+     IF user_role = 'admin' THEN
+       RETURN value;
+     ELSIF data_type = 'ssn' THEN
+       RETURN 'XXX-XX-' || RIGHT(value, 4);
+     ELSIF data_type = 'email' THEN
+       RETURN LEFT(value, 2) || 'XXXX@' || SPLIT_PART(value, '@', 2);
+     ELSE
+       RETURN value;
+     END IF;
+   END;
+   $$ LANGUAGE plpgsql SECURITY DEFINER;
+   ```
+
+3. **Patient de-identification**:
+   - Implement HIPAA Safe Harbor method for de-identified datasets
+   - Create separate views with automatically masked PII for research and analytics
+   - Establish protocols for minimum necessary access
+
+#### Access Controls for PII
+
+1. **Granular permission system**:
+
+   ```
+   role_permissions
+   ├── role_id
+   ├── resource_type (table name)
+   ├── field_name
+   ├── permission_type (view, edit, delete)
+   ├── can_view_pii (boolean)
+   └── requires_justification (boolean)
+   ```
+
+2. **Access justification and audit**:
+   ```
+   access_justifications
+   ├── access_id (PK)
+   ├── user_id
+   ├── patient_id
+   ├── resource_accessed
+   ├── justification_reason
+   ├── access_time
+   ├── ip_address
+   └── session_id
+   ```
+
+#### Regulatory Compliance Features
+
+1. **Patient rights management**:
+
+   - Right to access: Allow patients to download their complete records
+   - Right to correct: Implement correction request workflow
+   - Right to delete: Support data deletion requests within regulatory constraints
+
+2. **Consent management extensions**:
+
+   - Granular consent options for specific data usage
+   - Consent withdrawal tracking
+   - Age-appropriate consent handling (minors vs. adults)
+
+3. **Cross-border data transfer**:
+   ```
+   data_residency_rules
+   ├── data_type
+   ├── source_region
+   ├── destination_region
+   ├── transfer_allowed (boolean)
+   ├── requirements (JSONB)
+   └── effective_date
+   ```
+
+#### Data Minimization and Lifecycle
+
+1. **Data collection principles**:
+
+   - Collect only necessary information (purpose limitation)
+   - Use pseudonymization where possible
+   - Implement separate storage for identifiers and clinical data
+
+2. **Retention and deletion**:
+
+   ```sql
+   -- Automated data retention policy
+   CREATE OR REPLACE FUNCTION apply_retention_policy() RETURNS void AS $$
+   BEGIN
+     -- Anonymize data older than retention period
+     UPDATE patients
+     SET
+       first_name = 'REDACTED',
+       last_name = 'REDACTED',
+       email = NULL,
+       phone_number = NULL
+     WHERE last_activity_date < NOW() - INTERVAL '7 years'
+     AND status = 'inactive';
+
+     -- Mark for complete deletion after extended period
+     UPDATE patients
+     SET marked_for_deletion = TRUE
+     WHERE last_activity_date < NOW() - INTERVAL '10 years'
+     AND status = 'inactive';
+   END;
+   $$ LANGUAGE plpgsql;
+   ```
+
+3. **Data portability**:
+   - Implement standardized export formats (FHIR, CDA)
+   - Support bulk data export functionality
+   - Maintain relationships in exported data
+
+#### Incident Response for PII Breaches
+
+1. **Breach detection**:
+
+   - Implement anomaly detection for unusual data access
+   - Set up alerts for bulk data exports or unusual access patterns
+   - Regular scanning for exposed PII
+
+2. **Breach response workflow**:
+   ```
+   breach_incidents
+   ├── incident_id (PK)
+   ├── detection_date
+   ├── affected_data_types (array)
+   ├── estimated_users_affected
+   ├── containment_status
+   ├── notification_status
+   ├── remediation_steps
+   └── post_incident_analysis
+   ```
+
+By implementing these PII protection measures, the application can maintain compliance with healthcare privacy regulations while providing appropriate access to information for patient care.
+
+### Scaling and Performance
+
+#### Database Performance
+
+- Add database indexes on frequently queried fields
+- Implement connection pooling for efficient database connections
+- Consider read replicas for high-traffic deployments
+- Set up query caching for frequently accessed data
+- Implement database partitioning for large-scale deployments
+- Regular database vacuuming and maintenance
+
+#### Application Scaling
 
 - Deploy to a cloud provider with auto-scaling capabilities
-- Implement load balancing
-- Use a CDN for static assets
-- Implement caching strategies
-- Database replication and backups
+- Implement containerization with Docker and Kubernetes
+- Set up load balancing for horizontal scaling
+- Use CDN for static assets delivery
+- Implement server-side caching with Redis
+- Consider serverless functions for specific API endpoints
 
-### Security
+### Reliability and Monitoring
 
-- HTTPS for all connections
-- Implement proper authentication and authorization
-- Input validation and sanitization
-- Rate limiting to prevent abuse
-- Regular security audits and dependency updates
+- Set up comprehensive application logging
+- Implement distributed tracing for request flows
+- Configure monitoring dashboards with Grafana/Datadog
+- Set up alerts for critical issues and performance degradation
+- Regular database backups with point-in-time recovery
+- Implement health checks and automated recovery
+- Set up CI/CD pipelines for reliable deployments
 
-### Monitoring and Troubleshooting
+### Architecture Improvements
 
-- Implement comprehensive logging
-- Set up application performance monitoring
-- Configure alerts for critical issues
-- Use distributed tracing for request flows
-- Implement health checks
+- Migrate to a microservices architecture for better scaling
+- Implement a message queue (RabbitMQ/Kafka) for async operations
+- Add a separate analytics service for reporting
+- Consider using an API gateway for better request routing
+- Add WebSockets for real-time features
+- Implement service worker for offline capabilities
+
+### Frontend Optimizations
+
+- Server-side rendering for improved SEO and performance
+- Code splitting and lazy loading for faster initial load
+- Implement a robust state management solution (Redux/Zustand)
+- Add comprehensive error boundaries and fallback UIs
+- Optimize bundle size with tree shaking
+- Implement progressive web app features
+
+By addressing these considerations, the application would be ready for production use with improved security, scalability, and reliability.
 
 ## Trade-offs and Future Improvements
 
