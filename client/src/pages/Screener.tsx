@@ -5,23 +5,20 @@ import {
   ScoreResult,
 } from "../types/screener.types";
 import { fetchScreener, submitAnswers } from "../services/api.service";
-import Progress from "../components/Progress";
-import Question from "../components/Question";
-import Results from "../components/Results";
 import {
-  Container,
-  Card,
-  Header,
-  Title,
-  Subtitle,
-  ErrorMessage,
-} from "../styles/components.styles";
+  Loading,
+  Error,
+  Preview,
+  QuestionScreen,
+  ResultsScreen,
+} from "../components/screener";
 
 const ScreenerPage: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [screener, setScreener] = useState<ScreenerType | null>(null);
-  const [currentQuestionIndex, setCurrentQuestionIndex] = useState<number>(0);
+  const [currentSectionIndex, setCurrentSectionIndex] = useState<number>(0);
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState<number>(-1);
   const [answers, setAnswers] = useState<Answer[]>([]);
   const [results, setResults] = useState<ScoreResult | null>(null);
 
@@ -58,7 +55,10 @@ const ScreenerPage: React.FC = () => {
     setAnswers(newAnswers);
 
     // If this was the last question, submit the answers
-    if (currentQuestionIndex === section.questions.length - 1) {
+    if (
+      currentQuestionIndex === section.questions.length - 1 &&
+      currentSectionIndex === screener.content.sections.length - 1
+    ) {
       handleSubmit(newAnswers);
     } else {
       // Otherwise, move to the next question
@@ -81,85 +81,45 @@ const ScreenerPage: React.FC = () => {
   };
 
   const handleReset = () => {
-    setCurrentQuestionIndex(0);
+    setCurrentQuestionIndex(-1);
     setAnswers([]);
     setResults(null);
   };
 
+  // Render appropriate component based on current state
   if (loading && !screener) {
-    return (
-      <Container>
-        <Card>
-          <Header>
-            <Title>Loading...</Title>
-          </Header>
-        </Card>
-      </Container>
-    );
+    return <Loading />;
   }
 
-  if (error) {
-    return (
-      <Container>
-        <Card>
-          <Header>
-            <Title>Error</Title>
-          </Header>
-          <ErrorMessage>{error}</ErrorMessage>
-        </Card>
-      </Container>
-    );
+  if (error || !screener) {
+    return <Error message={error || "Failed to load the screener."} />;
   }
 
-  if (!screener) {
+  // Show preview page if the screener hasn't started yet
+  if (currentQuestionIndex === -1) {
     return (
-      <Container>
-        <Card>
-          <Header>
-            <Title>No screener available</Title>
-          </Header>
-        </Card>
-      </Container>
+      <Preview screener={screener} onStart={() => setCurrentQuestionIndex(0)} />
     );
   }
 
   if (results) {
     return (
-      <Container>
-        <Card>
-          <Header>
-            <Title>{screener.full_name}</Title>
-          </Header>
-          <Results results={results} onReset={handleReset} />
-        </Card>
-      </Container>
+      <ResultsScreen
+        screener={screener}
+        results={results}
+        onReset={handleReset}
+      />
     );
   }
 
-  const section = screener.content.sections[0]; // We only have one section in this example
-  const totalQuestions = section.questions.length;
-  const currentQuestion = section.questions[currentQuestionIndex];
-
+  // Show the question screen
   return (
-    <Container>
-      <Card>
-        <Header>
-          <Title>{screener.content.display_name}</Title>
-          <Subtitle>{section.title}</Subtitle>
-        </Header>
-
-        <Progress
-          currentQuestion={currentQuestionIndex + 1}
-          totalQuestions={totalQuestions}
-        />
-
-        <Question
-          question={currentQuestion}
-          answers={section.answers}
-          onAnswer={handleAnswer}
-        />
-      </Card>
-    </Container>
+    <QuestionScreen
+      screener={screener}
+      currentSectionIndex={currentSectionIndex}
+      currentQuestionIndex={currentQuestionIndex}
+      onAnswer={handleAnswer}
+    />
   );
 };
 

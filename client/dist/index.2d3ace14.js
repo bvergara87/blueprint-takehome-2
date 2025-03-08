@@ -36848,20 +36848,15 @@ var _jsxDevRuntime = require("react/jsx-dev-runtime");
 var _react = require("react");
 var _reactDefault = parcelHelpers.interopDefault(_react);
 var _apiService = require("../services/api.service");
-var _progress = require("../components/Progress");
-var _progressDefault = parcelHelpers.interopDefault(_progress);
-var _question = require("../components/Question");
-var _questionDefault = parcelHelpers.interopDefault(_question);
-var _results = require("../components/Results");
-var _resultsDefault = parcelHelpers.interopDefault(_results);
-var _componentsStyles = require("../styles/components.styles");
+var _screener = require("../components/screener");
 var _s = $RefreshSig$();
 const ScreenerPage = ()=>{
     _s();
     const [loading, setLoading] = (0, _react.useState)(true);
     const [error, setError] = (0, _react.useState)(null);
     const [screener, setScreener] = (0, _react.useState)(null);
-    const [currentQuestionIndex, setCurrentQuestionIndex] = (0, _react.useState)(0);
+    const [currentSectionIndex, setCurrentSectionIndex] = (0, _react.useState)(0);
+    const [currentQuestionIndex, setCurrentQuestionIndex] = (0, _react.useState)(-1);
     const [answers, setAnswers] = (0, _react.useState)([]);
     const [results, setResults] = (0, _react.useState)(null);
     (0, _react.useEffect)(()=>{
@@ -36894,7 +36889,7 @@ const ScreenerPage = ()=>{
         ];
         setAnswers(newAnswers);
         // If this was the last question, submit the answers
-        if (currentQuestionIndex === section.questions.length - 1) handleSubmit(newAnswers);
+        if (currentQuestionIndex === section.questions.length - 1 && currentSectionIndex === screener.content.sections.length - 1) handleSubmit(newAnswers);
         else // Otherwise, move to the next question
         setCurrentQuestionIndex(currentQuestionIndex + 1);
     };
@@ -36912,187 +36907,54 @@ const ScreenerPage = ()=>{
         }
     };
     const handleReset = ()=>{
-        setCurrentQuestionIndex(0);
+        setCurrentQuestionIndex(-1);
         setAnswers([]);
         setResults(null);
     };
-    if (loading && !screener) return /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _componentsStyles.Container), {
-        children: /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _componentsStyles.Card), {
-            children: /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _componentsStyles.Header), {
-                children: /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _componentsStyles.Title), {
-                    children: "Loading..."
-                }, void 0, false, {
-                    fileName: "src/pages/Screener.tsx",
-                    lineNumber: 94,
-                    columnNumber: 13
-                }, undefined)
-            }, void 0, false, {
-                fileName: "src/pages/Screener.tsx",
-                lineNumber: 93,
-                columnNumber: 11
-            }, undefined)
-        }, void 0, false, {
-            fileName: "src/pages/Screener.tsx",
-            lineNumber: 92,
-            columnNumber: 9
-        }, undefined)
-    }, void 0, false, {
+    // Render appropriate component based on current state
+    if (loading && !screener) return /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _screener.Loading), {}, void 0, false, {
         fileName: "src/pages/Screener.tsx",
         lineNumber: 91,
-        columnNumber: 7
+        columnNumber: 12
     }, undefined);
-    if (error) return /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _componentsStyles.Container), {
-        children: /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _componentsStyles.Card), {
-            children: [
-                /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _componentsStyles.Header), {
-                    children: /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _componentsStyles.Title), {
-                        children: "Error"
-                    }, void 0, false, {
-                        fileName: "src/pages/Screener.tsx",
-                        lineNumber: 106,
-                        columnNumber: 13
-                    }, undefined)
-                }, void 0, false, {
-                    fileName: "src/pages/Screener.tsx",
-                    lineNumber: 105,
-                    columnNumber: 11
-                }, undefined),
-                /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _componentsStyles.ErrorMessage), {
-                    children: error
-                }, void 0, false, {
-                    fileName: "src/pages/Screener.tsx",
-                    lineNumber: 108,
-                    columnNumber: 11
-                }, undefined)
-            ]
-        }, void 0, true, {
-            fileName: "src/pages/Screener.tsx",
-            lineNumber: 104,
-            columnNumber: 9
-        }, undefined)
+    if (error || !screener) return /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _screener.Error), {
+        message: error || "Failed to load the screener."
     }, void 0, false, {
         fileName: "src/pages/Screener.tsx",
-        lineNumber: 103,
-        columnNumber: 7
+        lineNumber: 95,
+        columnNumber: 12
     }, undefined);
-    if (!screener) return /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _componentsStyles.Container), {
-        children: /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _componentsStyles.Card), {
-            children: /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _componentsStyles.Header), {
-                children: /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _componentsStyles.Title), {
-                    children: "No screener available"
-                }, void 0, false, {
-                    fileName: "src/pages/Screener.tsx",
-                    lineNumber: 119,
-                    columnNumber: 13
-                }, undefined)
-            }, void 0, false, {
-                fileName: "src/pages/Screener.tsx",
-                lineNumber: 118,
-                columnNumber: 11
-            }, undefined)
-        }, void 0, false, {
-            fileName: "src/pages/Screener.tsx",
-            lineNumber: 117,
-            columnNumber: 9
-        }, undefined)
+    // Show preview page if the screener hasn't started yet
+    if (currentQuestionIndex === -1) return /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _screener.Preview), {
+        screener: screener,
+        onStart: ()=>setCurrentQuestionIndex(0)
     }, void 0, false, {
         fileName: "src/pages/Screener.tsx",
-        lineNumber: 116,
+        lineNumber: 101,
         columnNumber: 7
     }, undefined);
-    if (results) return /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _componentsStyles.Container), {
-        children: /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _componentsStyles.Card), {
-            children: [
-                /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _componentsStyles.Header), {
-                    children: /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _componentsStyles.Title), {
-                        children: screener.full_name
-                    }, void 0, false, {
-                        fileName: "src/pages/Screener.tsx",
-                        lineNumber: 131,
-                        columnNumber: 13
-                    }, undefined)
-                }, void 0, false, {
-                    fileName: "src/pages/Screener.tsx",
-                    lineNumber: 130,
-                    columnNumber: 11
-                }, undefined),
-                /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _resultsDefault.default), {
-                    results: results,
-                    onReset: handleReset
-                }, void 0, false, {
-                    fileName: "src/pages/Screener.tsx",
-                    lineNumber: 133,
-                    columnNumber: 11
-                }, undefined)
-            ]
-        }, void 0, true, {
-            fileName: "src/pages/Screener.tsx",
-            lineNumber: 129,
-            columnNumber: 9
-        }, undefined)
+    if (results) return /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _screener.ResultsScreen), {
+        screener: screener,
+        results: results,
+        onReset: handleReset
     }, void 0, false, {
         fileName: "src/pages/Screener.tsx",
-        lineNumber: 128,
+        lineNumber: 107,
         columnNumber: 7
     }, undefined);
-    const section = screener.content.sections[0]; // We only have one section in this example
-    const totalQuestions = section.questions.length;
-    const currentQuestion = section.questions[currentQuestionIndex];
-    return /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _componentsStyles.Container), {
-        children: /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _componentsStyles.Card), {
-            children: [
-                /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _componentsStyles.Header), {
-                    children: [
-                        /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _componentsStyles.Title), {
-                            children: screener.content.display_name
-                        }, void 0, false, {
-                            fileName: "src/pages/Screener.tsx",
-                            lineNumber: 147,
-                            columnNumber: 11
-                        }, undefined),
-                        /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _componentsStyles.Subtitle), {
-                            children: section.title
-                        }, void 0, false, {
-                            fileName: "src/pages/Screener.tsx",
-                            lineNumber: 148,
-                            columnNumber: 11
-                        }, undefined)
-                    ]
-                }, void 0, true, {
-                    fileName: "src/pages/Screener.tsx",
-                    lineNumber: 146,
-                    columnNumber: 9
-                }, undefined),
-                /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _progressDefault.default), {
-                    currentQuestion: currentQuestionIndex + 1,
-                    totalQuestions: totalQuestions
-                }, void 0, false, {
-                    fileName: "src/pages/Screener.tsx",
-                    lineNumber: 151,
-                    columnNumber: 9
-                }, undefined),
-                /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _questionDefault.default), {
-                    question: currentQuestion,
-                    answers: section.answers,
-                    onAnswer: handleAnswer
-                }, void 0, false, {
-                    fileName: "src/pages/Screener.tsx",
-                    lineNumber: 156,
-                    columnNumber: 9
-                }, undefined)
-            ]
-        }, void 0, true, {
-            fileName: "src/pages/Screener.tsx",
-            lineNumber: 145,
-            columnNumber: 7
-        }, undefined)
+    // Show the question screen
+    return /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _screener.QuestionScreen), {
+        screener: screener,
+        currentSectionIndex: currentSectionIndex,
+        currentQuestionIndex: currentQuestionIndex,
+        onAnswer: handleAnswer
     }, void 0, false, {
         fileName: "src/pages/Screener.tsx",
-        lineNumber: 144,
+        lineNumber: 117,
         columnNumber: 5
     }, undefined);
 };
-_s(ScreenerPage, "Sb7XrvGM0HH3lam3KLZvVVdWDXc=");
+_s(ScreenerPage, "vT15U9jXOTj2Mb1qPYXBkmatkaQ=");
 _c = ScreenerPage;
 exports.default = ScreenerPage;
 var _c;
@@ -37103,7 +36965,7 @@ $RefreshReg$(_c, "ScreenerPage");
   window.$RefreshReg$ = prevRefreshReg;
   window.$RefreshSig$ = prevRefreshSig;
 }
-},{"react/jsx-dev-runtime":"iTorj","react":"21dqq","../services/api.service":"6Stol","../components/Progress":"bA7Vu","../components/Question":"70Byy","../components/Results":"124p0","../styles/components.styles":"liHsc","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","@parcel/transformer-react-refresh-wrap/lib/helpers/helpers.js":"km3Ru"}],"6Stol":[function(require,module,exports,__globalThis) {
+},{"react/jsx-dev-runtime":"iTorj","react":"21dqq","../services/api.service":"6Stol","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","@parcel/transformer-react-refresh-wrap/lib/helpers/helpers.js":"km3Ru","../components/screener":"iqUNq"}],"6Stol":[function(require,module,exports,__globalThis) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "fetchScreener", ()=>fetchScreener);
@@ -37138,11 +37000,175 @@ const submitAnswers = async (answers)=>{
     }
 };
 
-},{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"bA7Vu":[function(require,module,exports,__globalThis) {
-var $parcel$ReactRefreshHelpers$329e = require("@parcel/transformer-react-refresh-wrap/lib/helpers/helpers.js");
+},{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"km3Ru":[function(require,module,exports,__globalThis) {
+"use strict";
+var Refresh = require("7422ead32dcc1e6b");
+var { version } = require("630b62916b1ae0e7");
+function debounce(func, delay) {
+    {
+        let timeout = undefined;
+        let lastTime = 0;
+        return function(args) {
+            // Call immediately if last call was more than the delay ago.
+            // Otherwise, set a timeout. This means the first call is fast
+            // (for the common case of a single update), and subsequent updates
+            // are batched.
+            let now = Date.now();
+            if (now - lastTime > delay) {
+                lastTime = now;
+                func.call(null, args);
+            } else {
+                clearTimeout(timeout);
+                timeout = setTimeout(function() {
+                    timeout = undefined;
+                    lastTime = Date.now();
+                    func.call(null, args);
+                }, delay);
+            }
+        };
+    }
+}
+var enqueueUpdate = debounce(function() {
+    Refresh.performReactRefresh();
+}, 30);
+// Everything below is either adapted or copied from
+// https://github.com/facebook/metro/blob/61de16bd1edd7e738dd0311c89555a644023ab2d/packages/metro/src/lib/polyfills/require.js
+// MIT License - Copyright (c) Facebook, Inc. and its affiliates.
+module.exports.prelude = function(module1) {
+    window.__REACT_REFRESH_VERSION_TRANSFORMER = version;
+    window.$RefreshReg$ = function(type, id) {
+        if (window.__REACT_REFRESH_VERSION_TRANSFORMER && window.__REACT_REFRESH_VERSION_RUNTIME && window.__REACT_REFRESH_VERSION_TRANSFORMER !== window.__REACT_REFRESH_VERSION_RUNTIME) // Both versions were set and they did not match
+        throw new Error(`react-refresh versions did not match between transformer and runtime. Please check your dependencies. Transformer: ${window.__REACT_REFRESH_VERSION_TRANSFORMER}, Runtime: ${window.__REACT_REFRESH_VERSION_RUNTIME}`);
+        Refresh.register(type, module1.id + ' ' + id);
+    };
+    window.$RefreshSig$ = Refresh.createSignatureFunctionForTransform;
+};
+module.exports.postlude = function(module1) {
+    if (isReactRefreshBoundary(module1.exports)) {
+        registerExportsForReactRefresh(module1);
+        if (module1.hot) {
+            module1.hot.dispose(function(data) {
+                if (Refresh.hasUnrecoverableErrors()) window.location.reload();
+                data.prevExports = module1.exports;
+            });
+            module1.hot.accept(function(getParents) {
+                var prevExports = module1.hot.data.prevExports;
+                var nextExports = module1.exports;
+                // Since we just executed the code for it, it's possible
+                // that the new exports make it ineligible for being a boundary.
+                var isNoLongerABoundary = !isReactRefreshBoundary(nextExports);
+                // It can also become ineligible if its exports are incompatible
+                // with the previous exports.
+                // For example, if you add/remove/change exports, we'll want
+                // to re-execute the importing modules, and force those components
+                // to re-render. Similarly, if you convert a class component
+                // to a function, we want to invalidate the boundary.
+                var didInvalidate = shouldInvalidateReactRefreshBoundary(prevExports, nextExports);
+                if (isNoLongerABoundary || didInvalidate) {
+                    // We'll be conservative. The only case in which we won't do a full
+                    // reload is if all parent modules are also refresh boundaries.
+                    // In that case we'll add them to the current queue.
+                    var parents = getParents();
+                    if (parents.length === 0) {
+                        // Looks like we bubbled to the root. Can't recover from that.
+                        window.location.reload();
+                        return;
+                    }
+                    return parents;
+                }
+                enqueueUpdate();
+            });
+        }
+    }
+};
+function isReactRefreshBoundary(exports) {
+    if (Refresh.isLikelyComponentType(exports)) return true;
+    if (exports == null || typeof exports !== 'object') // Exit if we can't iterate over exports.
+    return false;
+    var hasExports = false;
+    var areAllExportsComponents = true;
+    let isESM = '__esModule' in exports;
+    for(var key in exports){
+        hasExports = true;
+        if (key === '__esModule') continue;
+        var desc = Object.getOwnPropertyDescriptor(exports, key);
+        if (desc && desc.get && !isESM) // Don't invoke getters for CJS as they may have side effects.
+        return false;
+        var exportValue = exports[key];
+        if (!Refresh.isLikelyComponentType(exportValue)) areAllExportsComponents = false;
+    }
+    return hasExports && areAllExportsComponents;
+}
+function shouldInvalidateReactRefreshBoundary(prevExports, nextExports) {
+    var prevSignature = getRefreshBoundarySignature(prevExports);
+    var nextSignature = getRefreshBoundarySignature(nextExports);
+    if (prevSignature.length !== nextSignature.length) return true;
+    for(var i = 0; i < nextSignature.length; i++){
+        if (prevSignature[i] !== nextSignature[i]) return true;
+    }
+    return false;
+}
+// When this signature changes, it's unsafe to stop at this refresh boundary.
+function getRefreshBoundarySignature(exports) {
+    var signature = [];
+    signature.push(Refresh.getFamilyByType(exports));
+    if (exports == null || typeof exports !== 'object') // Exit if we can't iterate over exports.
+    // (This is important for legacy environments.)
+    return signature;
+    let isESM = '__esModule' in exports;
+    for(var key in exports){
+        if (key === '__esModule') continue;
+        var desc = Object.getOwnPropertyDescriptor(exports, key);
+        if (desc && desc.get && !isESM) continue;
+        var exportValue = exports[key];
+        signature.push(key);
+        signature.push(Refresh.getFamilyByType(exportValue));
+    }
+    return signature;
+}
+function registerExportsForReactRefresh(module1) {
+    var exports = module1.exports, id = module1.id;
+    Refresh.register(exports, id + ' %exports%');
+    if (exports == null || typeof exports !== 'object') // Exit if we can't iterate over exports.
+    // (This is important for legacy environments.)
+    return;
+    let isESM = '__esModule' in exports;
+    for(var key in exports){
+        var desc = Object.getOwnPropertyDescriptor(exports, key);
+        if (desc && desc.get && !isESM) continue;
+        var exportValue = exports[key];
+        var typeID = id + ' %exports% ' + key;
+        Refresh.register(exportValue, typeID);
+    }
+}
+
+},{"7422ead32dcc1e6b":"786KC","630b62916b1ae0e7":"4SQxb"}],"4SQxb":[function(require,module,exports,__globalThis) {
+module.exports = JSON.parse("{\"name\":\"react-refresh\",\"description\":\"React is a JavaScript library for building user interfaces.\",\"keywords\":[\"react\"],\"version\":\"0.14.2\",\"homepage\":\"https://reactjs.org/\",\"bugs\":\"https://github.com/facebook/react/issues\",\"license\":\"MIT\",\"files\":[\"LICENSE\",\"README.md\",\"babel.js\",\"runtime.js\",\"cjs/\",\"umd/\"],\"main\":\"runtime.js\",\"exports\":{\".\":\"./runtime.js\",\"./runtime\":\"./runtime.js\",\"./babel\":\"./babel.js\",\"./package.json\":\"./package.json\"},\"repository\":{\"type\":\"git\",\"url\":\"https://github.com/facebook/react.git\",\"directory\":\"packages/react\"},\"engines\":{\"node\":\">=0.10.0\"},\"devDependencies\":{\"react-16-8\":\"npm:react@16.8.0\",\"react-dom-16-8\":\"npm:react-dom@16.8.0\",\"scheduler-0-13\":\"npm:scheduler@0.13.0\"}}");
+
+},{}],"iqUNq":[function(require,module,exports,__globalThis) {
+var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
+parcelHelpers.defineInteropFlag(exports);
+parcelHelpers.export(exports, "Loading", ()=>(0, _loadingDefault.default));
+parcelHelpers.export(exports, "Error", ()=>(0, _errorDefault.default));
+parcelHelpers.export(exports, "Preview", ()=>(0, _previewDefault.default));
+parcelHelpers.export(exports, "QuestionScreen", ()=>(0, _questionScreenDefault.default));
+parcelHelpers.export(exports, "ResultsScreen", ()=>(0, _resultsScreenDefault.default));
+var _loading = require("./Loading");
+var _loadingDefault = parcelHelpers.interopDefault(_loading);
+var _error = require("./Error");
+var _errorDefault = parcelHelpers.interopDefault(_error);
+var _preview = require("./Preview");
+var _previewDefault = parcelHelpers.interopDefault(_preview);
+var _questionScreen = require("./QuestionScreen");
+var _questionScreenDefault = parcelHelpers.interopDefault(_questionScreen);
+var _resultsScreen = require("./ResultsScreen");
+var _resultsScreenDefault = parcelHelpers.interopDefault(_resultsScreen);
+
+},{"./Loading":"CvOno","./Error":"9jp45","./Preview":"fnGJM","./QuestionScreen":"kPXJ9","./ResultsScreen":"gLayO","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"CvOno":[function(require,module,exports,__globalThis) {
+var $parcel$ReactRefreshHelpers$6421 = require("@parcel/transformer-react-refresh-wrap/lib/helpers/helpers.js");
 var prevRefreshReg = window.$RefreshReg$;
 var prevRefreshSig = window.$RefreshSig$;
-$parcel$ReactRefreshHelpers$329e.prelude(module);
+$parcel$ReactRefreshHelpers$6421.prelude(module);
 
 try {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
@@ -37150,48 +37176,45 @@ parcelHelpers.defineInteropFlag(exports);
 var _jsxDevRuntime = require("react/jsx-dev-runtime");
 var _react = require("react");
 var _reactDefault = parcelHelpers.interopDefault(_react);
-var _componentsStyles = require("../styles/components.styles");
-const Progress = ({ currentQuestion, totalQuestions })=>{
-    const progress = currentQuestion / totalQuestions * 100;
-    return /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _componentsStyles.ProgressContainer), {
-        children: [
-            /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _componentsStyles.ProgressBar), {
-                progress: progress
+var _componentsStyles = require("../../styles/components.styles");
+const Loading = ()=>{
+    return /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _componentsStyles.Container), {
+        children: /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _componentsStyles.Card), {
+            children: /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _componentsStyles.Header), {
+                children: /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _componentsStyles.Title), {
+                    children: "Loading..."
+                }, void 0, false, {
+                    fileName: "src/components/screener/Loading.tsx",
+                    lineNumber: 9,
+                    columnNumber: 11
+                }, undefined)
             }, void 0, false, {
-                fileName: "src/components/Progress.tsx",
-                lineNumber: 21,
-                columnNumber: 7
-            }, undefined),
-            /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _componentsStyles.ProgressText), {
-                children: [
-                    "Question ",
-                    currentQuestion,
-                    " of ",
-                    totalQuestions
-                ]
-            }, void 0, true, {
-                fileName: "src/components/Progress.tsx",
-                lineNumber: 22,
-                columnNumber: 7
+                fileName: "src/components/screener/Loading.tsx",
+                lineNumber: 8,
+                columnNumber: 9
             }, undefined)
-        ]
-    }, void 0, true, {
-        fileName: "src/components/Progress.tsx",
-        lineNumber: 20,
+        }, void 0, false, {
+            fileName: "src/components/screener/Loading.tsx",
+            lineNumber: 7,
+            columnNumber: 7
+        }, undefined)
+    }, void 0, false, {
+        fileName: "src/components/screener/Loading.tsx",
+        lineNumber: 6,
         columnNumber: 5
     }, undefined);
 };
-_c = Progress;
-exports.default = Progress;
+_c = Loading;
+exports.default = Loading;
 var _c;
-$RefreshReg$(_c, "Progress");
+$RefreshReg$(_c, "Loading");
 
-  $parcel$ReactRefreshHelpers$329e.postlude(module);
+  $parcel$ReactRefreshHelpers$6421.postlude(module);
 } finally {
   window.$RefreshReg$ = prevRefreshReg;
   window.$RefreshSig$ = prevRefreshSig;
 }
-},{"react/jsx-dev-runtime":"iTorj","react":"21dqq","../styles/components.styles":"liHsc","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","@parcel/transformer-react-refresh-wrap/lib/helpers/helpers.js":"km3Ru"}],"liHsc":[function(require,module,exports,__globalThis) {
+},{"react/jsx-dev-runtime":"iTorj","react":"21dqq","../../styles/components.styles":"liHsc","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","@parcel/transformer-react-refresh-wrap/lib/helpers/helpers.js":"km3Ru"}],"liHsc":[function(require,module,exports,__globalThis) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "Container", ()=>Container);
@@ -37340,7 +37363,7 @@ const Button = (0, _styledComponentsDefault.default).button`
   font-size: 1rem;
   font-weight: 500;
   transition: background-color 0.2s;
-
+  margin-top: 1rem;
   &:hover {
     background-color: #2563eb;
   }
@@ -37359,156 +37382,11 @@ const ErrorMessage = (0, _styledComponentsDefault.default).div`
   text-align: center;
 `;
 
-},{"styled-components":"1U3k6","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"km3Ru":[function(require,module,exports,__globalThis) {
-"use strict";
-var Refresh = require("7422ead32dcc1e6b");
-var { version } = require("630b62916b1ae0e7");
-function debounce(func, delay) {
-    {
-        let timeout = undefined;
-        let lastTime = 0;
-        return function(args) {
-            // Call immediately if last call was more than the delay ago.
-            // Otherwise, set a timeout. This means the first call is fast
-            // (for the common case of a single update), and subsequent updates
-            // are batched.
-            let now = Date.now();
-            if (now - lastTime > delay) {
-                lastTime = now;
-                func.call(null, args);
-            } else {
-                clearTimeout(timeout);
-                timeout = setTimeout(function() {
-                    timeout = undefined;
-                    lastTime = Date.now();
-                    func.call(null, args);
-                }, delay);
-            }
-        };
-    }
-}
-var enqueueUpdate = debounce(function() {
-    Refresh.performReactRefresh();
-}, 30);
-// Everything below is either adapted or copied from
-// https://github.com/facebook/metro/blob/61de16bd1edd7e738dd0311c89555a644023ab2d/packages/metro/src/lib/polyfills/require.js
-// MIT License - Copyright (c) Facebook, Inc. and its affiliates.
-module.exports.prelude = function(module1) {
-    window.__REACT_REFRESH_VERSION_TRANSFORMER = version;
-    window.$RefreshReg$ = function(type, id) {
-        if (window.__REACT_REFRESH_VERSION_TRANSFORMER && window.__REACT_REFRESH_VERSION_RUNTIME && window.__REACT_REFRESH_VERSION_TRANSFORMER !== window.__REACT_REFRESH_VERSION_RUNTIME) // Both versions were set and they did not match
-        throw new Error(`react-refresh versions did not match between transformer and runtime. Please check your dependencies. Transformer: ${window.__REACT_REFRESH_VERSION_TRANSFORMER}, Runtime: ${window.__REACT_REFRESH_VERSION_RUNTIME}`);
-        Refresh.register(type, module1.id + ' ' + id);
-    };
-    window.$RefreshSig$ = Refresh.createSignatureFunctionForTransform;
-};
-module.exports.postlude = function(module1) {
-    if (isReactRefreshBoundary(module1.exports)) {
-        registerExportsForReactRefresh(module1);
-        if (module1.hot) {
-            module1.hot.dispose(function(data) {
-                if (Refresh.hasUnrecoverableErrors()) window.location.reload();
-                data.prevExports = module1.exports;
-            });
-            module1.hot.accept(function(getParents) {
-                var prevExports = module1.hot.data.prevExports;
-                var nextExports = module1.exports;
-                // Since we just executed the code for it, it's possible
-                // that the new exports make it ineligible for being a boundary.
-                var isNoLongerABoundary = !isReactRefreshBoundary(nextExports);
-                // It can also become ineligible if its exports are incompatible
-                // with the previous exports.
-                // For example, if you add/remove/change exports, we'll want
-                // to re-execute the importing modules, and force those components
-                // to re-render. Similarly, if you convert a class component
-                // to a function, we want to invalidate the boundary.
-                var didInvalidate = shouldInvalidateReactRefreshBoundary(prevExports, nextExports);
-                if (isNoLongerABoundary || didInvalidate) {
-                    // We'll be conservative. The only case in which we won't do a full
-                    // reload is if all parent modules are also refresh boundaries.
-                    // In that case we'll add them to the current queue.
-                    var parents = getParents();
-                    if (parents.length === 0) {
-                        // Looks like we bubbled to the root. Can't recover from that.
-                        window.location.reload();
-                        return;
-                    }
-                    return parents;
-                }
-                enqueueUpdate();
-            });
-        }
-    }
-};
-function isReactRefreshBoundary(exports) {
-    if (Refresh.isLikelyComponentType(exports)) return true;
-    if (exports == null || typeof exports !== 'object') // Exit if we can't iterate over exports.
-    return false;
-    var hasExports = false;
-    var areAllExportsComponents = true;
-    let isESM = '__esModule' in exports;
-    for(var key in exports){
-        hasExports = true;
-        if (key === '__esModule') continue;
-        var desc = Object.getOwnPropertyDescriptor(exports, key);
-        if (desc && desc.get && !isESM) // Don't invoke getters for CJS as they may have side effects.
-        return false;
-        var exportValue = exports[key];
-        if (!Refresh.isLikelyComponentType(exportValue)) areAllExportsComponents = false;
-    }
-    return hasExports && areAllExportsComponents;
-}
-function shouldInvalidateReactRefreshBoundary(prevExports, nextExports) {
-    var prevSignature = getRefreshBoundarySignature(prevExports);
-    var nextSignature = getRefreshBoundarySignature(nextExports);
-    if (prevSignature.length !== nextSignature.length) return true;
-    for(var i = 0; i < nextSignature.length; i++){
-        if (prevSignature[i] !== nextSignature[i]) return true;
-    }
-    return false;
-}
-// When this signature changes, it's unsafe to stop at this refresh boundary.
-function getRefreshBoundarySignature(exports) {
-    var signature = [];
-    signature.push(Refresh.getFamilyByType(exports));
-    if (exports == null || typeof exports !== 'object') // Exit if we can't iterate over exports.
-    // (This is important for legacy environments.)
-    return signature;
-    let isESM = '__esModule' in exports;
-    for(var key in exports){
-        if (key === '__esModule') continue;
-        var desc = Object.getOwnPropertyDescriptor(exports, key);
-        if (desc && desc.get && !isESM) continue;
-        var exportValue = exports[key];
-        signature.push(key);
-        signature.push(Refresh.getFamilyByType(exportValue));
-    }
-    return signature;
-}
-function registerExportsForReactRefresh(module1) {
-    var exports = module1.exports, id = module1.id;
-    Refresh.register(exports, id + ' %exports%');
-    if (exports == null || typeof exports !== 'object') // Exit if we can't iterate over exports.
-    // (This is important for legacy environments.)
-    return;
-    let isESM = '__esModule' in exports;
-    for(var key in exports){
-        var desc = Object.getOwnPropertyDescriptor(exports, key);
-        if (desc && desc.get && !isESM) continue;
-        var exportValue = exports[key];
-        var typeID = id + ' %exports% ' + key;
-        Refresh.register(exportValue, typeID);
-    }
-}
-
-},{"7422ead32dcc1e6b":"786KC","630b62916b1ae0e7":"4SQxb"}],"4SQxb":[function(require,module,exports,__globalThis) {
-module.exports = JSON.parse("{\"name\":\"react-refresh\",\"description\":\"React is a JavaScript library for building user interfaces.\",\"keywords\":[\"react\"],\"version\":\"0.14.2\",\"homepage\":\"https://reactjs.org/\",\"bugs\":\"https://github.com/facebook/react/issues\",\"license\":\"MIT\",\"files\":[\"LICENSE\",\"README.md\",\"babel.js\",\"runtime.js\",\"cjs/\",\"umd/\"],\"main\":\"runtime.js\",\"exports\":{\".\":\"./runtime.js\",\"./runtime\":\"./runtime.js\",\"./babel\":\"./babel.js\",\"./package.json\":\"./package.json\"},\"repository\":{\"type\":\"git\",\"url\":\"https://github.com/facebook/react.git\",\"directory\":\"packages/react\"},\"engines\":{\"node\":\">=0.10.0\"},\"devDependencies\":{\"react-16-8\":\"npm:react@16.8.0\",\"react-dom-16-8\":\"npm:react-dom@16.8.0\",\"scheduler-0-13\":\"npm:scheduler@0.13.0\"}}");
-
-},{}],"70Byy":[function(require,module,exports,__globalThis) {
-var $parcel$ReactRefreshHelpers$55af = require("@parcel/transformer-react-refresh-wrap/lib/helpers/helpers.js");
+},{"styled-components":"1U3k6","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"9jp45":[function(require,module,exports,__globalThis) {
+var $parcel$ReactRefreshHelpers$592f = require("@parcel/transformer-react-refresh-wrap/lib/helpers/helpers.js");
 var prevRefreshReg = window.$RefreshReg$;
 var prevRefreshSig = window.$RefreshSig$;
-$parcel$ReactRefreshHelpers$55af.prelude(module);
+$parcel$ReactRefreshHelpers$592f.prelude(module);
 
 try {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
@@ -37516,14 +37394,332 @@ parcelHelpers.defineInteropFlag(exports);
 var _jsxDevRuntime = require("react/jsx-dev-runtime");
 var _react = require("react");
 var _reactDefault = parcelHelpers.interopDefault(_react);
-var _componentsStyles = require("../styles/components.styles");
+var _componentsStyles = require("../../styles/components.styles");
+const Error = ({ message })=>{
+    return /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _componentsStyles.Container), {
+        children: /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _componentsStyles.Card), {
+            children: [
+                /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _componentsStyles.Header), {
+                    children: /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _componentsStyles.Title), {
+                        children: "Error"
+                    }, void 0, false, {
+                        fileName: "src/components/screener/Error.tsx",
+                        lineNumber: 19,
+                        columnNumber: 11
+                    }, undefined)
+                }, void 0, false, {
+                    fileName: "src/components/screener/Error.tsx",
+                    lineNumber: 18,
+                    columnNumber: 9
+                }, undefined),
+                /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _componentsStyles.ErrorMessage), {
+                    children: message
+                }, void 0, false, {
+                    fileName: "src/components/screener/Error.tsx",
+                    lineNumber: 21,
+                    columnNumber: 9
+                }, undefined)
+            ]
+        }, void 0, true, {
+            fileName: "src/components/screener/Error.tsx",
+            lineNumber: 17,
+            columnNumber: 7
+        }, undefined)
+    }, void 0, false, {
+        fileName: "src/components/screener/Error.tsx",
+        lineNumber: 16,
+        columnNumber: 5
+    }, undefined);
+};
+_c = Error;
+exports.default = Error;
+var _c;
+$RefreshReg$(_c, "Error");
+
+  $parcel$ReactRefreshHelpers$592f.postlude(module);
+} finally {
+  window.$RefreshReg$ = prevRefreshReg;
+  window.$RefreshSig$ = prevRefreshSig;
+}
+},{"react/jsx-dev-runtime":"iTorj","react":"21dqq","../../styles/components.styles":"liHsc","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","@parcel/transformer-react-refresh-wrap/lib/helpers/helpers.js":"km3Ru"}],"fnGJM":[function(require,module,exports,__globalThis) {
+var $parcel$ReactRefreshHelpers$f78b = require("@parcel/transformer-react-refresh-wrap/lib/helpers/helpers.js");
+var prevRefreshReg = window.$RefreshReg$;
+var prevRefreshSig = window.$RefreshSig$;
+$parcel$ReactRefreshHelpers$f78b.prelude(module);
+
+try {
+var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
+parcelHelpers.defineInteropFlag(exports);
+var _jsxDevRuntime = require("react/jsx-dev-runtime");
+var _react = require("react");
+var _reactDefault = parcelHelpers.interopDefault(_react);
+var _componentsStyles = require("../../styles/components.styles");
+const Preview = ({ screener, onStart })=>{
+    return /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _componentsStyles.Container), {
+        children: /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _componentsStyles.Card), {
+            children: [
+                /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _componentsStyles.Header), {
+                    children: [
+                        /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _componentsStyles.Title), {
+                            children: screener.full_name
+                        }, void 0, false, {
+                            fileName: "src/components/screener/Preview.tsx",
+                            lineNumber: 22,
+                            columnNumber: 11
+                        }, undefined),
+                        /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _componentsStyles.Subtitle), {
+                            children: "About this Assessment"
+                        }, void 0, false, {
+                            fileName: "src/components/screener/Preview.tsx",
+                            lineNumber: 23,
+                            columnNumber: 11
+                        }, undefined)
+                    ]
+                }, void 0, true, {
+                    fileName: "src/components/screener/Preview.tsx",
+                    lineNumber: 21,
+                    columnNumber: 9
+                }, undefined),
+                /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("div", {
+                    style: {
+                        textAlign: "center",
+                        marginBottom: "2rem"
+                    },
+                    children: [
+                        /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("p", {
+                            style: {
+                                marginBottom: "1rem"
+                            },
+                            children: [
+                                "This screener is designed to help assess symptoms related to",
+                                " ",
+                                screener.disorder,
+                                "."
+                            ]
+                        }, void 0, true, {
+                            fileName: "src/components/screener/Preview.tsx",
+                            lineNumber: 26,
+                            columnNumber: 11
+                        }, undefined),
+                        /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("p", {
+                            style: {
+                                marginBottom: "1rem"
+                            },
+                            children: [
+                                "You will be presented with a series of",
+                                " ",
+                                screener.content.sections[0].questions.length,
+                                " questions about your experiences. Your answers will help determine if you might benefit from further evaluation."
+                            ]
+                        }, void 0, true, {
+                            fileName: "src/components/screener/Preview.tsx",
+                            lineNumber: 30,
+                            columnNumber: 11
+                        }, undefined),
+                        /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("p", {
+                            style: {
+                                marginBottom: "2rem"
+                            },
+                            children: "This is not a diagnostic tool, but rather a first step in understanding your mental health needs. The results should be discussed with a qualified healthcare professional."
+                        }, void 0, false, {
+                            fileName: "src/components/screener/Preview.tsx",
+                            lineNumber: 36,
+                            columnNumber: 11
+                        }, undefined),
+                        /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _componentsStyles.Button), {
+                            onClick: onStart,
+                            children: "Begin Assessment"
+                        }, void 0, false, {
+                            fileName: "src/components/screener/Preview.tsx",
+                            lineNumber: 41,
+                            columnNumber: 11
+                        }, undefined)
+                    ]
+                }, void 0, true, {
+                    fileName: "src/components/screener/Preview.tsx",
+                    lineNumber: 25,
+                    columnNumber: 9
+                }, undefined)
+            ]
+        }, void 0, true, {
+            fileName: "src/components/screener/Preview.tsx",
+            lineNumber: 20,
+            columnNumber: 7
+        }, undefined)
+    }, void 0, false, {
+        fileName: "src/components/screener/Preview.tsx",
+        lineNumber: 19,
+        columnNumber: 5
+    }, undefined);
+};
+_c = Preview;
+exports.default = Preview;
+var _c;
+$RefreshReg$(_c, "Preview");
+
+  $parcel$ReactRefreshHelpers$f78b.postlude(module);
+} finally {
+  window.$RefreshReg$ = prevRefreshReg;
+  window.$RefreshSig$ = prevRefreshSig;
+}
+},{"react/jsx-dev-runtime":"iTorj","react":"21dqq","../../styles/components.styles":"liHsc","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","@parcel/transformer-react-refresh-wrap/lib/helpers/helpers.js":"km3Ru"}],"kPXJ9":[function(require,module,exports,__globalThis) {
+var $parcel$ReactRefreshHelpers$a308 = require("@parcel/transformer-react-refresh-wrap/lib/helpers/helpers.js");
+var prevRefreshReg = window.$RefreshReg$;
+var prevRefreshSig = window.$RefreshSig$;
+$parcel$ReactRefreshHelpers$a308.prelude(module);
+
+try {
+var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
+parcelHelpers.defineInteropFlag(exports);
+var _jsxDevRuntime = require("react/jsx-dev-runtime");
+var _react = require("react");
+var _reactDefault = parcelHelpers.interopDefault(_react);
+var _progress = require("./Progress");
+var _progressDefault = parcelHelpers.interopDefault(_progress);
+var _question = require("./Question");
+var _questionDefault = parcelHelpers.interopDefault(_question);
+var _componentsStyles = require("../../styles/components.styles");
+const QuestionScreen = ({ screener, currentSectionIndex, currentQuestionIndex, onAnswer })=>{
+    const section = screener.content.sections[currentSectionIndex];
+    const totalQuestions = section.questions.length;
+    const currentQuestion = section.questions[currentQuestionIndex];
+    return /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _componentsStyles.Container), {
+        children: /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _componentsStyles.Card), {
+            children: [
+                /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _componentsStyles.Header), {
+                    children: [
+                        /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _componentsStyles.Title), {
+                            children: screener.content.display_name
+                        }, void 0, false, {
+                            fileName: "src/components/screener/QuestionScreen.tsx",
+                            lineNumber: 34,
+                            columnNumber: 11
+                        }, undefined),
+                        /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _componentsStyles.Subtitle), {
+                            children: section.title
+                        }, void 0, false, {
+                            fileName: "src/components/screener/QuestionScreen.tsx",
+                            lineNumber: 35,
+                            columnNumber: 11
+                        }, undefined)
+                    ]
+                }, void 0, true, {
+                    fileName: "src/components/screener/QuestionScreen.tsx",
+                    lineNumber: 33,
+                    columnNumber: 9
+                }, undefined),
+                /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _progressDefault.default), {
+                    currentQuestion: currentQuestionIndex + 1,
+                    totalQuestions: totalQuestions
+                }, void 0, false, {
+                    fileName: "src/components/screener/QuestionScreen.tsx",
+                    lineNumber: 38,
+                    columnNumber: 9
+                }, undefined),
+                /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _questionDefault.default), {
+                    question: currentQuestion,
+                    answers: section.answers,
+                    onAnswer: onAnswer
+                }, void 0, false, {
+                    fileName: "src/components/screener/QuestionScreen.tsx",
+                    lineNumber: 43,
+                    columnNumber: 9
+                }, undefined)
+            ]
+        }, void 0, true, {
+            fileName: "src/components/screener/QuestionScreen.tsx",
+            lineNumber: 32,
+            columnNumber: 7
+        }, undefined)
+    }, void 0, false, {
+        fileName: "src/components/screener/QuestionScreen.tsx",
+        lineNumber: 31,
+        columnNumber: 5
+    }, undefined);
+};
+_c = QuestionScreen;
+exports.default = QuestionScreen;
+var _c;
+$RefreshReg$(_c, "QuestionScreen");
+
+  $parcel$ReactRefreshHelpers$a308.postlude(module);
+} finally {
+  window.$RefreshReg$ = prevRefreshReg;
+  window.$RefreshSig$ = prevRefreshSig;
+}
+},{"react/jsx-dev-runtime":"iTorj","react":"21dqq","../../styles/components.styles":"liHsc","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","@parcel/transformer-react-refresh-wrap/lib/helpers/helpers.js":"km3Ru","./Progress":"2Wp2X","./Question":"5hmPE"}],"2Wp2X":[function(require,module,exports,__globalThis) {
+var $parcel$ReactRefreshHelpers$7ca7 = require("@parcel/transformer-react-refresh-wrap/lib/helpers/helpers.js");
+var prevRefreshReg = window.$RefreshReg$;
+var prevRefreshSig = window.$RefreshSig$;
+$parcel$ReactRefreshHelpers$7ca7.prelude(module);
+
+try {
+var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
+parcelHelpers.defineInteropFlag(exports);
+var _jsxDevRuntime = require("react/jsx-dev-runtime");
+var _react = require("react");
+var _reactDefault = parcelHelpers.interopDefault(_react);
+var _componentsStyles = require("../../styles/components.styles");
+const Progress = ({ currentQuestion, totalQuestions })=>{
+    const progress = currentQuestion / totalQuestions * 100;
+    return /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _componentsStyles.ProgressContainer), {
+        children: [
+            /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _componentsStyles.ProgressBar), {
+                progress: progress
+            }, void 0, false, {
+                fileName: "src/components/screener/Progress.tsx",
+                lineNumber: 21,
+                columnNumber: 7
+            }, undefined),
+            /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _componentsStyles.ProgressText), {
+                children: [
+                    "Question ",
+                    currentQuestion,
+                    " of ",
+                    totalQuestions
+                ]
+            }, void 0, true, {
+                fileName: "src/components/screener/Progress.tsx",
+                lineNumber: 22,
+                columnNumber: 7
+            }, undefined)
+        ]
+    }, void 0, true, {
+        fileName: "src/components/screener/Progress.tsx",
+        lineNumber: 20,
+        columnNumber: 5
+    }, undefined);
+};
+_c = Progress;
+exports.default = Progress;
+var _c;
+$RefreshReg$(_c, "Progress");
+
+  $parcel$ReactRefreshHelpers$7ca7.postlude(module);
+} finally {
+  window.$RefreshReg$ = prevRefreshReg;
+  window.$RefreshSig$ = prevRefreshSig;
+}
+},{"react/jsx-dev-runtime":"iTorj","react":"21dqq","../../styles/components.styles":"liHsc","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","@parcel/transformer-react-refresh-wrap/lib/helpers/helpers.js":"km3Ru"}],"5hmPE":[function(require,module,exports,__globalThis) {
+var $parcel$ReactRefreshHelpers$599f = require("@parcel/transformer-react-refresh-wrap/lib/helpers/helpers.js");
+var prevRefreshReg = window.$RefreshReg$;
+var prevRefreshSig = window.$RefreshSig$;
+$parcel$ReactRefreshHelpers$599f.prelude(module);
+
+try {
+var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
+parcelHelpers.defineInteropFlag(exports);
+var _jsxDevRuntime = require("react/jsx-dev-runtime");
+var _react = require("react");
+var _reactDefault = parcelHelpers.interopDefault(_react);
+var _componentsStyles = require("../../styles/components.styles");
 const QuestionComponent = ({ question, answers, onAnswer })=>{
     return /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("div", {
         children: [
             /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _componentsStyles.QuestionTitle), {
                 children: question.title
             }, void 0, false, {
-                fileName: "src/components/Question.tsx",
+                fileName: "src/components/screener/Question.tsx",
                 lineNumber: 22,
                 columnNumber: 7
             }, undefined),
@@ -37532,18 +37728,18 @@ const QuestionComponent = ({ question, answers, onAnswer })=>{
                         onClick: ()=>onAnswer(answer.value),
                         children: answer.title
                     }, answer.value, false, {
-                        fileName: "src/components/Question.tsx",
+                        fileName: "src/components/screener/Question.tsx",
                         lineNumber: 25,
                         columnNumber: 11
                     }, undefined))
-            }, void 0, false, {
-                fileName: "src/components/Question.tsx",
+            }, question.title, false, {
+                fileName: "src/components/screener/Question.tsx",
                 lineNumber: 23,
                 columnNumber: 7
             }, undefined)
         ]
     }, void 0, true, {
-        fileName: "src/components/Question.tsx",
+        fileName: "src/components/screener/Question.tsx",
         lineNumber: 21,
         columnNumber: 5
     }, undefined);
@@ -37553,16 +37749,16 @@ exports.default = QuestionComponent;
 var _c;
 $RefreshReg$(_c, "QuestionComponent");
 
-  $parcel$ReactRefreshHelpers$55af.postlude(module);
+  $parcel$ReactRefreshHelpers$599f.postlude(module);
 } finally {
   window.$RefreshReg$ = prevRefreshReg;
   window.$RefreshSig$ = prevRefreshSig;
 }
-},{"react/jsx-dev-runtime":"iTorj","react":"21dqq","../styles/components.styles":"liHsc","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","@parcel/transformer-react-refresh-wrap/lib/helpers/helpers.js":"km3Ru"}],"124p0":[function(require,module,exports,__globalThis) {
-var $parcel$ReactRefreshHelpers$7d56 = require("@parcel/transformer-react-refresh-wrap/lib/helpers/helpers.js");
+},{"react/jsx-dev-runtime":"iTorj","react":"21dqq","../../styles/components.styles":"liHsc","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","@parcel/transformer-react-refresh-wrap/lib/helpers/helpers.js":"km3Ru"}],"gLayO":[function(require,module,exports,__globalThis) {
+var $parcel$ReactRefreshHelpers$fee2 = require("@parcel/transformer-react-refresh-wrap/lib/helpers/helpers.js");
 var prevRefreshReg = window.$RefreshReg$;
 var prevRefreshSig = window.$RefreshSig$;
-$parcel$ReactRefreshHelpers$7d56.prelude(module);
+$parcel$ReactRefreshHelpers$fee2.prelude(module);
 
 try {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
@@ -37570,61 +37766,92 @@ parcelHelpers.defineInteropFlag(exports);
 var _jsxDevRuntime = require("react/jsx-dev-runtime");
 var _react = require("react");
 var _reactDefault = parcelHelpers.interopDefault(_react);
-var _componentsStyles = require("../styles/components.styles");
-const Results = ({ results, onReset })=>{
-    return /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _componentsStyles.ResultsContainer), {
-        children: [
-            /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _componentsStyles.ResultsTitle), {
-                children: "Based on your responses, we recommend the following assessments:"
-            }, void 0, false, {
-                fileName: "src/components/Results.tsx",
-                lineNumber: 19,
-                columnNumber: 7
-            }, undefined),
-            results.results.length > 0 ? /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _componentsStyles.ResultsList), {
-                children: results.results.map((assessment)=>/*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _componentsStyles.ResultsItem), {
-                        children: assessment
-                    }, assessment, false, {
-                        fileName: "src/components/Results.tsx",
-                        lineNumber: 26,
-                        columnNumber: 13
-                    }, undefined))
-            }, void 0, false, {
-                fileName: "src/components/Results.tsx",
-                lineNumber: 24,
-                columnNumber: 9
-            }, undefined) : /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("p", {
-                children: "No specific assessments recommended at this time."
-            }, void 0, false, {
-                fileName: "src/components/Results.tsx",
-                lineNumber: 30,
-                columnNumber: 9
-            }, undefined),
-            /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _componentsStyles.Button), {
-                onClick: onReset,
-                children: "Start Over"
-            }, void 0, false, {
-                fileName: "src/components/Results.tsx",
-                lineNumber: 33,
-                columnNumber: 7
-            }, undefined)
-        ]
-    }, void 0, true, {
-        fileName: "src/components/Results.tsx",
-        lineNumber: 18,
+var _componentsStyles = require("../../styles/components.styles");
+const ResultsScreen = ({ screener, results, onReset })=>{
+    return /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _componentsStyles.Container), {
+        children: /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _componentsStyles.Card), {
+            children: [
+                /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _componentsStyles.Header), {
+                    children: /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _componentsStyles.Title), {
+                        children: screener.full_name
+                    }, void 0, false, {
+                        fileName: "src/components/screener/ResultsScreen.tsx",
+                        lineNumber: 30,
+                        columnNumber: 11
+                    }, undefined)
+                }, void 0, false, {
+                    fileName: "src/components/screener/ResultsScreen.tsx",
+                    lineNumber: 29,
+                    columnNumber: 9
+                }, undefined),
+                /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _componentsStyles.ResultsContainer), {
+                    children: [
+                        results.results.length > 0 ? /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _jsxDevRuntime.Fragment), {
+                            children: [
+                                /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _componentsStyles.ResultsTitle), {
+                                    children: "Based on your responses, we recommend the following assessments:"
+                                }, void 0, false, {
+                                    fileName: "src/components/screener/ResultsScreen.tsx",
+                                    lineNumber: 35,
+                                    columnNumber: 15
+                                }, undefined),
+                                /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _componentsStyles.ResultsList), {
+                                    children: results.results.map((assessment)=>/*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _componentsStyles.ResultsItem), {
+                                            children: assessment
+                                        }, assessment, false, {
+                                            fileName: "src/components/screener/ResultsScreen.tsx",
+                                            lineNumber: 40,
+                                            columnNumber: 19
+                                        }, undefined))
+                                }, void 0, false, {
+                                    fileName: "src/components/screener/ResultsScreen.tsx",
+                                    lineNumber: 38,
+                                    columnNumber: 15
+                                }, undefined)
+                            ]
+                        }, void 0, true) : /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("p", {
+                            children: "No specific assessments recommended at this time."
+                        }, void 0, false, {
+                            fileName: "src/components/screener/ResultsScreen.tsx",
+                            lineNumber: 45,
+                            columnNumber: 13
+                        }, undefined),
+                        /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _componentsStyles.Button), {
+                            onClick: onReset,
+                            children: "Start Over"
+                        }, void 0, false, {
+                            fileName: "src/components/screener/ResultsScreen.tsx",
+                            lineNumber: 48,
+                            columnNumber: 11
+                        }, undefined)
+                    ]
+                }, void 0, true, {
+                    fileName: "src/components/screener/ResultsScreen.tsx",
+                    lineNumber: 32,
+                    columnNumber: 9
+                }, undefined)
+            ]
+        }, void 0, true, {
+            fileName: "src/components/screener/ResultsScreen.tsx",
+            lineNumber: 28,
+            columnNumber: 7
+        }, undefined)
+    }, void 0, false, {
+        fileName: "src/components/screener/ResultsScreen.tsx",
+        lineNumber: 27,
         columnNumber: 5
     }, undefined);
 };
-_c = Results;
-exports.default = Results;
+_c = ResultsScreen;
+exports.default = ResultsScreen;
 var _c;
-$RefreshReg$(_c, "Results");
+$RefreshReg$(_c, "ResultsScreen");
 
-  $parcel$ReactRefreshHelpers$7d56.postlude(module);
+  $parcel$ReactRefreshHelpers$fee2.postlude(module);
 } finally {
   window.$RefreshReg$ = prevRefreshReg;
   window.$RefreshSig$ = prevRefreshSig;
 }
-},{"react/jsx-dev-runtime":"iTorj","react":"21dqq","../styles/components.styles":"liHsc","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","@parcel/transformer-react-refresh-wrap/lib/helpers/helpers.js":"km3Ru"}]},["aQL8O","kMAEo","4aBH6"], "4aBH6", "parcelRequire94c2")
+},{"react/jsx-dev-runtime":"iTorj","react":"21dqq","../../styles/components.styles":"liHsc","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","@parcel/transformer-react-refresh-wrap/lib/helpers/helpers.js":"km3Ru"}]},["aQL8O","kMAEo","4aBH6"], "4aBH6", "parcelRequire94c2")
 
 //# sourceMappingURL=index.2d3ace14.js.map

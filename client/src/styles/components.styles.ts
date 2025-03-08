@@ -142,7 +142,7 @@ export const Button = styled.button`
   font-size: 1rem;
   font-weight: 500;
   transition: background-color 0.2s;
-
+  margin-top: 1rem;
   &:hover {
     background-color: #2563eb;
   }
