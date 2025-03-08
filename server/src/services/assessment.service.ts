@@ -134,7 +134,7 @@ export class AssessmentService {
         throw new Error("Failed to load screener data");
       }
 
-      return data.data;
+      return data;
     } catch (error) {
       console.error("Error loading screener data:", error);
       throw new Error("Failed to load screener data");
