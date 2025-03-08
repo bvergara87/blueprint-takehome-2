@@ -37,9 +37,12 @@ RUN npm prune --omit=dev
 # Final stage for app image
 FROM base
 
+# Install a simple HTTP server to serve static content
+RUN npm install -g serve
+
 # Copy built application
-COPY --from=build /app /app
+COPY --from=build /app/dist /app/dist
 
 # Start the server by default, this can be overwritten at runtime
 EXPOSE 3000
-CMD [ "npm", "run", "start" ]
+CMD [ "serve", "-s", "dist", "-l", "3000" ]

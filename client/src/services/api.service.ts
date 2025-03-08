@@ -1,6 +1,9 @@
 import { Screener, Answer, ScoreResult } from "../types/screener.types";
 
-const API_URL = "http://localhost:3000";
+const API_URL =
+  process.env.NODE_ENV === "production"
+    ? "https://blueprint-takehome-server.fly.dev"
+    : "http://localhost:3000";
 
 export const fetchScreener = async (): Promise<Screener> => {
   try {
