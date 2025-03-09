@@ -65,7 +65,7 @@ The application uses Supabase Postgres database with the following tables:
 - **screeners**: Stores the screener questionnaires
 - **responses**: Stores patient responses and assessment results
 
-## Technical Reasoning.
+## Technical Reasoning and Trade-offs
 
 I chose to build the application using the same stack that Blueprint is written in.
 
@@ -102,14 +102,6 @@ In contrast, a more robust AWS implementation would offer:
 - **Enterprise Support**: Multiple tiers of enterprise support with dedicated technical account managers
 - **Advanced Networking**: More sophisticated networking controls, VPC options, and security features
 - **Scalability Ceiling**: Practically unlimited scaling potential for high-traffic applications
-
-## Additional Features
-
-Obviously this is a microcosm of the actual Blueprint architecture and does not contain some of the more robust features on the Blueprint platform (audio message upload and transcription).
-
-If I were to implement a solution for uploading audio files and transcribe as described in the Blueprint product offering, I would build an architecture to upload audio files into small chunks (5s in length, ordered using some chunk sequence e.g. {userId}-{sessionId}-{chunkId}) to our backend server (would need to have a load balancer and horizontal scaling depending on the traffic and geolocation of requests) then stitch said audio files together as they come in then proceed with transcription. A queue-based service like AWS SQS would make sense to decouple upload operations vs transcription operations, and the transcription itself should live in a separate self-contained Lambda function which can scale as needed.
-
-Some considerations would be cost of spinning up various server instances in different locations around the world but as a system, we would want to prioritize consistency in my opinion (we can have the audio files stored in the client if the upload service is overloaded) but we want to make sure that the audio files are in the correct order and transcribed correctly.
 
 ## Migration Path to Production Architecture
 
@@ -164,7 +156,7 @@ For a production-grade application supporting significant scale, I would do the 
 
 ## Database Discussion
 
-As Blueprint continues to grow at scale, database management and scaling will be paramount for the end-user experience. Here are some ways that I would improve upon the existing database implementation. This includes a discussion of the patient-provider paradigm and security/access considerations for each role as well as some considerations about HIPAA compliance and consent, PII storage, classification, access and management, and
+As Blueprint continues to grow at scale, database management and scaling will be paramount for the end-user experience. Here are some ways that I would improve upon the existing database implementation. This includes a discussion of the patient-provider paradigm and security/access considerations for each role as well as some considerations about HIPAA compliance and consent. Some proposed workflow/views are appended to the discussion that would be added beyond the existing assessment from in this application.
 
 ### Row Level Security (RLS)
 
@@ -273,8 +265,6 @@ assessment_results
 └── shared_at
 ```
 
-#### Consent Management
-
 For HIPAA compliance, the system should include consent management:
 
 ```
@@ -345,25 +335,21 @@ In a production application, the provider-patient relationship would enable spec
 
 1. **Provider Dashboard**:
 
-   - View all assigned patients
+   - View all patients
+   - Assign new assessments to patients (option to assign recurring assessments)
    - Monitor assessment completion status
    - Review assessment results
-   - Assign new assessments to patients
 
 2. **Patient Dashboard**:
 
-   - View assigned providers
+   - View assigned provider
    - See pending assessments
    - Access shared assessment results
    - Request appointments based on assessment results
-
-3. **Assessment Assignment**:
-
-   - Providers can assign specific screeners to patients
    - Automated reminders for incomplete assessments
-   - Option to schedule recurring assessments
+   - View progress based on metrics defined by the Provider and assessment data
 
-4. **Result Sharing**:
+3. **Result Sharing**:
    - Providers review results before sharing with patients
    - Ability to add contextual notes to results
    - Optional notification system when results are shared
@@ -379,7 +365,16 @@ Some other HIPAA and PII/PHI considerations:
   -Implement field-level encryption for highly sensitive fields (SSN, medical record numbers)
 - Mask or Truncate PII when using the applications UI or when a client is screenshotting
 
+## Additional Features
+
+Obviously this is a microcosm of the actual Blueprint architecture and does not contain some of the more robust features on the Blueprint platform (audio message upload and transcription).
+
+If I were to implement a solution for uploading audio files and transcribe as described in the Blueprint product offering, I would build an architecture to upload audio files into small chunks (5s in length, ordered using some chunk sequence e.g. {userId}-{sessionId}-{chunkId}) to our backend server (would need to have a load balancer and horizontal scaling depending on the traffic and geolocation of requests) then stitch said audio files together as they come in then proceed with transcription. A queue-based service like AWS SQS would make sense to decouple upload operations vs transcription operations, and the transcription itself should live in a separate self-contained Lambda function which can scale as needed.
+
+Some considerations would be cost of spinning up various server instances in different locations around the world but as a system, we would want to prioritize consistency in my opinion (we can have the audio files stored in the client if the upload service is overloaded) but we want to make sure that the audio files are in the correct order and transcribed correctly.
+
 ## Links
 
-- [MyLessonPal](https://github.com/bvergara87/MyLessonPal)
+- [MyLessonPal](https://mylessonpal.com)
+- [LearnFromHome](https://app.learnfromhomeai.com)
 - [LinkedIn/Resume](https://www.linkedin.com/in/bryant-vergara/)
