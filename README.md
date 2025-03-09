@@ -154,8 +154,13 @@ For a production-grade application supporting significant scale, I would do the 
    - Containerize application using Docker (used in Fly.io deployment here but a full Docker container implentation would be better for prod)
 
 6. **Testing & Deployment**:
+
    - Add comprehensive test coverage with unit, integration, and end-to-end tests
    - Develop a full CI/CD pipeline to prevent manual deployment bypassing the test suite.
+
+7. **UI**:
+
+   - Use a modern UI component framework like Shadcn Components instead of Styled Components
 
 ## Database Discussion
 
