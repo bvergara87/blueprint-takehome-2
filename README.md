@@ -329,7 +329,7 @@ For the provider-patient relationship, Row Level Security would be implemented a
    );
    ```
 
-#### Workflows
+### Additional Workflows
 
 In a production application, the provider-patient relationship would enable specific workflows:
 
