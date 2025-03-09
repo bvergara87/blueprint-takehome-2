@@ -1,6 +1,6 @@
 # Blueprint Clinical Assessment Application
 
-A fullstack web application for administering clinical assessments, built with React, Styled Components, Express, NestJS, and Supabase Postgres.
+A fullstack web application for administering clinical assessments, built with React, Styled Components, Express, NestJS, and Supabase Postgres, deployed on Fly.io
 
 ## Project Overview
 
@@ -24,6 +24,7 @@ This application allows patients to take a diagnostic screener (a questionnaire 
 - TypeScript
 - Parcel 2 (bundler)
 - Supabase JavaScript Client
+- Fly.io (deployment)
 
 ### Backend
 
@@ -31,72 +32,6 @@ This application allows patients to take a diagnostic screener (a questionnaire 
 - Express
 - TypeScript
 - Supabase (PostgreSQL database with service role access)
-
-## Getting Started
-
-### Prerequisites
-
-- Node.js (v14 or later)
-- npm
-- Supabase account (free tier available at https://supabase.com)
-
-### Setting up Supabase
-
-1. Create a new Supabase project
-2. Copy your Supabase URL and Service Role Key (from Project Settings > API)
-3. Update the `.env` file in the server directory with your Supabase credentials:
-
-```
-SUPABASE_URL=your_supabase_url
-SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
-SUPABASE_PASSWORD=your_database_password
-SUPABASE_DIRECT_URL=your_direct_database_url
-PORT=3000
-```
-
-4. Follow the instructions in `SUPABASE_SETUP.md` to configure your database:
-   - Create the necessary stored procedures for SQL execution
-   - Run the database setup script
-
-```
-cd server
-npm run db:setup
-```
-
-This will create the necessary tables and populate them with initial data.
-
-### Installation
-
-1. Clone the repository
-
-```
-git clone <repository-url>
-cd blueprint-takehome-2
-```
-
-2. Install dependencies for both client and server
-
-```
-# Install server dependencies
-cd server
-npm install
-
-# Install client dependencies
-cd ../client
-npm install
-```
-
-3. Start the development servers
-
-```
-# Start the server (from the server directory)
-npm run start:dev
-
-# Start the client (from the client directory)
-npm run start
-```
-
-4. Open your browser and navigate to `http://localhost:1234` to see the application.
 
 ## Project Structure
 
@@ -112,7 +47,8 @@ blueprint-takehome-2/
 │   ├── src/                 # Application source code
 │   │   ├── controllers/     # API endpoints
 │   │   ├── services/        # Business logic
-│   │   ├── models/          # Data models
+│   │   ├── interfaces/      # Types
+│   │   ├── dtos/            # Data Transfer Objects for Validation
 │   │   └── main.ts          # Application entry point
 │   ├── .env                 # Environment variables
 │   └── package.json         # Backend dependencies
@@ -129,13 +65,94 @@ The application uses Supabase Postgres database with the following tables:
 - **screeners**: Stores the screener questionnaires
 - **responses**: Stores patient responses and assessment results
 
-## Production Deployment Considerations
+## Technical Reasoning.
 
-For a production deployment of this application, several critical enhancements should be made:
+I chose to build the application using the same stack that Blueprint is written in. Obviously this is a microcosm and does not contain some of the more robust features on the Blueprint platform (audio message upload and transcription). If I were to implement a solution for that example, I would build an architecture to upload audio files in chunks (ordered using some chunk sequence e.g. {userId}-{sessionId}-{chunkId}) to our backend server then stitch said audio files together as they come in then proceed with transcription. A queue-based service like AWS SQS would make sense to decouple upload operations vs transcription operations in separate self-contained Lambda functions.
 
-### Security Enhancements
+For this application, I chose Supabase Postgres as our database solution, which offers several advantages:
 
-#### Row Level Security (RLS)
+- **Rapid Development**: Supabase provided a user-friendly interface and built-in APIs that accelerated our initial development
+- **Postgres Foundation**: Leverages the reliability and features of PostgreSQL while adding developer-friendly abstractions
+- **Built-in Auth**: Simplified authentication system that integrates directly with the database
+- **Real-time Capabilities**: Native support for real-time updates without additional infrastructure
+- **Cost-effective**: Low starting costs with a generous free tier for development
+
+However, compared to enterprise solutions like AWS RDS, Supabase has limitations:
+
+- **Limited Scaling Options**: Fewer options for vertical and horizontal scaling compared to AWS RDS
+- **Less Control**: Limited infrastructure customization options compared to self-hosted solutions
+- **Operational Maturity**: Newer platform with less mature operational tooling than established providers
+- **Ecosystem Integration**: More limited integration with broader cloud service ecosystems
+- **Enterprise SLAs**: Less comprehensive SLAs and support options for mission-critical applications
+
+#### Hosting: Fly.io vs. AWS
+
+We deployed the application on Fly.io, which provided these benefits:
+
+- **Developer Experience**: Simplified deployment workflow with automatic global distribution
+- **Edge Deployment**: Low-latency hosting with servers close to users worldwide
+- **Simple Configuration**: Infrastructure-as-code with minimal configuration
+- **Cost Efficiency**: Pay-per-use pricing model with lower baseline costs than equivalent AWS services
+- **Automatic SSL**: Built-in SSL certificate management and provisioning
+
+In contrast, a more robust AWS implementation would offer:
+
+- **Ecosystem Breadth**: Access to 200+ integrated services for every possible requirement
+- **Compliance Certifications**: More comprehensive compliance certifications for regulated industries
+- **Enterprise Support**: Multiple tiers of enterprise support with dedicated technical account managers
+- **Advanced Networking**: More sophisticated networking controls, VPC options, and security features
+- **Scalability Ceiling**: Practically unlimited scaling potential for high-traffic applications
+
+## Migration Path to Production Architecture
+
+For a production-grade application supporting significant scale, we would recommend:
+
+1. **Database Migration**:
+
+   - Migrate from Supabase to AWS RDS for better scaling and enterprise features
+   - Implement read replicas and auto-scaling for high availability
+   - Use AWS Secrets Manager for more secure credential management
+
+2. **Hosting Infrastructure**:
+
+   - Transition from Fly.io to AWS ECS/EKS for container orchestration
+   - Implement AWS Application Load Balancer for sophisticated request routing
+   - Leverage AWS Auto Scaling Groups for dynamic capacity management
+   - Deploy across multiple availability zones for high availability
+
+3. **Security Enhancements**:
+
+   - Replace Supabase Auth with Amazon Cognito or an enterprise identity provider
+   - Implement AWS WAF for advanced request filtering and protection
+   - Utilize AWS Shield for DDoS protection
+   - Deploy through AWS CloudFormation for infrastructure as code
+
+4. **Monitoring and Operations**:
+
+   - Replace basic logging with AWS CloudWatch for comprehensive monitoring
+   - Implement AWS X-Ray for distributed tracing
+   - Set up CloudWatch Alarms for automated incident response
+   - Establish AWS Backup for comprehensive backup strategy
+
+5. **Architecture Evolution**:
+   - Decompose monolith into microservices using AWS Lambda and API Gateway
+   - Implement event-driven architecture using AWS EventBridge
+   - Adopt AWS Step Functions for complex workflow orchestration
+   - Leverage AWS SQS/SNS for reliable message processing
+
+The current architecture represents a pragmatic balance between development speed, cost, and scalability - appropriate for an MVP or moderate-scale application, but would benefit from migration to more robust infrastructure as user adoption grows.
+
+### Additional Future Improvements
+
+- Add comprehensive test coverage with unit, integration, and end-to-end tests
+- Implement user authentication with role-based access control
+- Enhance UI/UX with animations and more intuitive interactions
+- Support offline mode with service workers and local storage
+- Add a comprehensive analytics dashboard for providers
+
+## Database Enhancements
+
+### Row Level Security (RLS)
 
 The current implementation uses a service role key with full database access. For production:
 
@@ -148,7 +165,7 @@ The current implementation uses a service role key with full database access. Fo
   USING (auth.uid() = user_id);
   ```
 
-#### User Authentication
+### User Authentication
 
 - Implement Supabase Auth for secure user authentication
 - Set up email/password, social login, and/or SSO options
@@ -156,7 +173,7 @@ The current implementation uses a service role key with full database access. Fo
 - Add JWT verification middleware to protect API endpoints
 - Implement session management and token refresh logic
 
-#### API Security
+### API Security
 
 - Replace service role key with JWT auth in client-server communication
 - Implement rate limiting to prevent abuse
@@ -166,7 +183,7 @@ The current implementation uses a service role key with full database access. Fo
 
 ### Provider-Patient Relationship Model
 
-In a production healthcare application, properly modeling the provider-patient relationship is critical for both workflow functionality and regulatory compliance. Here's how this relationship should be structured:
+In a production application, properly modeling the provider-patient relationship is critical for both workflow functionality and regulatory compliance. Here's how this relationship should be structured:
 
 #### User Database Model
 
@@ -546,99 +563,7 @@ Implement a robust data classification system:
 - Add comprehensive error boundaries and fallback UIs
 - Optimize bundle size with tree shaking
 
-## Trade-offs and Future Improvements
+## Links
 
-### Architecture and Technology Trade-offs
-
-#### Database: Supabase vs. Enterprise Solutions
-
-For this application, I chose Supabase Postgres as our database solution, which offers several advantages:
-
-- **Rapid Development**: Supabase provided a user-friendly interface and built-in APIs that accelerated our initial development
-- **Postgres Foundation**: Leverages the reliability and features of PostgreSQL while adding developer-friendly abstractions
-- **Built-in Auth**: Simplified authentication system that integrates directly with the database
-- **Real-time Capabilities**: Native support for real-time updates without additional infrastructure
-- **Cost-effective**: Low starting costs with a generous free tier for development
-
-However, compared to enterprise solutions like AWS RDS, Supabase has limitations:
-
-- **Limited Scaling Options**: Fewer options for vertical and horizontal scaling compared to AWS RDS
-- **Less Control**: Limited infrastructure customization options compared to self-hosted solutions
-- **Operational Maturity**: Newer platform with less mature operational tooling than established providers
-- **Ecosystem Integration**: More limited integration with broader cloud service ecosystems
-- **Enterprise SLAs**: Less comprehensive SLAs and support options for mission-critical applications
-
-#### Hosting: Fly.io vs. AWS
-
-We deployed the application on Fly.io, which provided these benefits:
-
-- **Developer Experience**: Simplified deployment workflow with automatic global distribution
-- **Edge Deployment**: Low-latency hosting with servers close to users worldwide
-- **Simple Configuration**: Infrastructure-as-code with minimal configuration
-- **Cost Efficiency**: Pay-per-use pricing model with lower baseline costs than equivalent AWS services
-- **Automatic SSL**: Built-in SSL certificate management and provisioning
-
-In contrast, a more robust AWS implementation would offer:
-
-- **Ecosystem Breadth**: Access to 200+ integrated services for every possible requirement
-- **Compliance Certifications**: More comprehensive compliance certifications for regulated industries
-- **Enterprise Support**: Multiple tiers of enterprise support with dedicated technical account managers
-- **Advanced Networking**: More sophisticated networking controls, VPC options, and security features
-- **Scalability Ceiling**: Practically unlimited scaling potential for high-traffic applications
-
-#### Full-stack Trade-offs
-
-The current architecture makes several opinionated choices that prioritize development speed:
-
-- **NestJS/React Stack**: Chose modern TypeScript frameworks that support rapid development but requires specialized knowledge compared to more common stacks
-- **Service Role Access**: Using Supabase service role for simplicity rather than implementing proper JWT-based auth flow
-- **Monolithic Structure**: Single codebase rather than microservices for simplicity, with corresponding scaling limitations
-- **Limited Test Coverage**: Prioritized feature development over comprehensive testing infrastructure
-- **Manual Deployment**: Simple deployment process without CI/CD pipelines or automated testing
-
-### Migration Path to Enterprise Architecture
-
-For a production-grade application supporting significant scale, we would recommend:
-
-1. **Database Migration**:
-
-   - Migrate from Supabase to AWS RDS for better scaling and enterprise features
-   - Implement read replicas and auto-scaling for high availability
-   - Use AWS Secrets Manager for more secure credential management
-
-2. **Hosting Infrastructure**:
-
-   - Transition from Fly.io to AWS ECS/EKS for container orchestration
-   - Implement AWS Application Load Balancer for sophisticated request routing
-   - Leverage AWS Auto Scaling Groups for dynamic capacity management
-   - Deploy across multiple availability zones for high availability
-
-3. **Security Enhancements**:
-
-   - Replace Supabase Auth with Amazon Cognito or an enterprise identity provider
-   - Implement AWS WAF for advanced request filtering and protection
-   - Utilize AWS Shield for DDoS protection
-   - Deploy through AWS CloudFormation for infrastructure as code
-
-4. **Monitoring and Operations**:
-
-   - Replace basic logging with AWS CloudWatch for comprehensive monitoring
-   - Implement AWS X-Ray for distributed tracing
-   - Set up CloudWatch Alarms for automated incident response
-   - Establish AWS Backup for comprehensive backup strategy
-
-5. **Architecture Evolution**:
-   - Decompose monolith into microservices using AWS Lambda and API Gateway
-   - Implement event-driven architecture using AWS EventBridge
-   - Adopt AWS Step Functions for complex workflow orchestration
-   - Leverage AWS SQS/SNS for reliable message processing
-
-The current architecture represents a pragmatic balance between development speed, cost, and scalability - appropriate for an MVP or moderate-scale application, but would benefit from migration to more robust infrastructure as user adoption grows.
-
-### Additional Future Improvements
-
-- Add comprehensive test coverage with unit, integration, and end-to-end tests
-- Implement user authentication with role-based access control
-- Enhance UI/UX with animations and more intuitive interactions
-- Support offline mode with service workers and local storage
-- Add a comprehensive analytics dashboard for providers
+- [MyLessonPal](https://github.com/bvergara87/MyLessonPal)
+- [LinkedIn/Resume](https://www.linkedin.com/in/bryant-vergara/)
