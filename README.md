@@ -115,6 +115,7 @@ For a production-grade application supporting significant scale, I would do the 
 
    - Migrate from Supabase to AWS RDS for better scaling and enterprise features
    - Implement read replicas and auto-scaling for high availability
+   - Add an ORM like Prisma or Drizzle for better type and schema consistency
    - Use AWS Secrets Manager for more secure credential management
    - Add database indexes on frequently queried fields
    - Implement connection pooling for efficient database connections
