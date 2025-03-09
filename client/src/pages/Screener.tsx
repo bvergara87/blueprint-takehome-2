@@ -70,6 +70,7 @@ const ScreenerPage: React.FC = () => {
     try {
       setLoading(true);
       setError(null);
+      console.log(answersToSubmit);
       const result = await submitAnswers(answersToSubmit);
       setResults(result);
     } catch (err) {

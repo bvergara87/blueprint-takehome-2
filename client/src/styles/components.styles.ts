@@ -37,7 +37,7 @@ export const Subtitle = styled.h2`
   text-align: center;
   color: #4b5563;
   font-weight: 400;
-  margin-bottom: 1.5rem;
+  margin-bottom: 10px;
 `;
 
 export const QuestionTitle = styled.h3`

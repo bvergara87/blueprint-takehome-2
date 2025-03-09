@@ -47,20 +47,6 @@ export class AssessmentService {
     }
   }
 
-  async scoreAnswers(answers: Answer[]): Promise<string[]> {
-    // Calculate domain scores
-    const domainScores = this.calculateDomainScores(answers);
-
-    // Determine which assessments should be assigned
-    const assessments = this.determineAssessments(domainScores);
-
-    // Store the response in the database
-    await this.storeResponse(answers, assessments);
-
-    // Remove duplicates and return
-    return [...new Set(assessments)];
-  }
-
   private calculateDomainScores(answers: Answer[]): Map<string, number> {
     const domainScores = new Map<string, number>();
 
@@ -121,6 +107,19 @@ export class AssessmentService {
     }
   }
 
+  async scoreAnswers(answers: Answer[]): Promise<string[]> {
+    // Calculate domain scores
+    const domainScores = this.calculateDomainScores(answers);
+
+    // Determine which assessments should be assigned
+    const assessments = this.determineAssessments(domainScores);
+
+    // Store the response in the database
+    await this.storeResponse(answers, assessments);
+
+    // Remove duplicates and return
+    return [...new Set(assessments)];
+  }
   async getScreener(): Promise<any> {
     try {
       const { data, error } = await this.supabaseService.client
