@@ -2,6 +2,10 @@
 
 A fullstack web application for administering clinical assessments, built with React, Styled Components, Express, NestJS, and Supabase Postgres, deployed on Fly.io
 
+Client: [https://blueprint-takehome-client.fly.dev/]
+
+Server: [https://blueprint-takehome-client.fly.dev/]
+
 ## Project Overview
 
 This application allows patients to take a diagnostic screener (a questionnaire covering various symptoms) and automatically assigns appropriate assessments based on their responses.
@@ -73,7 +77,7 @@ For this application, I chose Supabase Postgres as our database solution, which 
 
 - **Rapid Development**: Supabase provided a user-friendly interface and built-in APIs that accelerated our initial development
 - **Postgres Foundation**: Leverages the reliability and features of PostgreSQL while adding developer-friendly abstractions
-- **Built-in Auth**: Simplified authentication system that integrates directly with the database
+- **Built-in Auth**: Simplified authentication system that integrates directly with the database (though not implemented in this application)
 - **Real-time Capabilities**: Native support for real-time updates without additional infrastructure
 - **Cost-effective**: Low starting costs with a generous free tier for development
 
@@ -129,26 +133,25 @@ For a production-grade application supporting significant scale, I would do the 
 3. **Security Enhancements**:
 
    - Replace Supabase Auth with Amazon Cognito or an enterprise identity provider
-   - Separate User access by roles
-   - Utilize AWS Shield for DDoS protection
+   - Add Row-Level Security and role-based access controls (more on this below)
+   - Separate User access by roles (Provider vs. Patients, more below)
    - Add JWT verification middleware to protect API endpoints
    - Implement session management and token refresh logic
-   - Replace service role key with JWT auth in client-server communication
-   - Add input validation and sanitization for all endpoints
    - Set up security headers (CSP, CORS, HSTS, etc.)
+   - Utilize AWS Shield for DDoS protection
 
 4. **Monitoring and Operations**:
 
    - Replace basic logging with AWS CloudWatch for comprehensive monitoring
    - Set up CloudWatch Alarms for automated incident response
    - Establish AWS Backup for comprehensive backup strategy
+   - Add Sentry for any client related errors
+   - Mixpanel or Posthog for UX monitoring
 
 5. **Architecture Evolution**:
 
-   - Decompose monolith into microservices using AWS Lambda and API Gateway
-   - Implement event-driven architecture using AWS EventBridge
-   - Adopt AWS Step Functions for complex workflow orchestration
-   - Leverage AWS SQS for reliable message processing
+   - Decompose monolith into microservices
+   - Containerize application using Docker (used in Fly.io deployment here but a full Docker container implentation would be better for prod)
 
 6. **Testing & Deployment**:
    - Add comprehensive test coverage with unit, integration, and end-to-end tests
