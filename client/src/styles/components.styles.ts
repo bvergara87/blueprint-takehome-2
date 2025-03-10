@@ -107,7 +107,7 @@ export const Subtitle = styled.h2`
 `;
 
 export const QuestionTitle = styled.h3`
-  font-size: 1.25rem;
+  font-size: 1.15rem;
   color: #1a1a1a;
   margin-bottom: 2rem;
   line-height: 1.4;
